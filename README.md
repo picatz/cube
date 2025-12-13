@@ -1,7 +1,7 @@
 # cube
 > Chrome URL Blocking Extension
 
-This is a custom [Google Chrome](https://www.google.com/chrome/) extension that blocks pre-determined [URL](https://en.wikipedia.org/wiki/URL)s.
+This is a custom [Google Chrome](https://www.google.com/chrome/) extension that blocks network requests matching a predefined set of URL patterns.
 
 ## Installation
 
@@ -12,14 +12,26 @@ This is a custom [Google Chrome](https://www.google.com/chrome/) extension that 
 
 ## How does it work?
 
-The chrome browser exposes a [webRequest](https://developer.chrome.com/extensions/webRequest) API that enables plugin developers to observe and analyze traffic and to intercept, block, or modify requests in-flight. This makes it almost trivial to develop a URL blocking extension, which is exactly what `cube` does.
+`cube` is a Manifest V3 extension that uses Chrome’s [declarativeNetRequest](https://developer.chrome.com/docs/extensions/reference/declarativeNetRequest/) API.
 
-For example, if we wanted to block requests to `microsoft.com`:
+The block list lives in `rules.json`, which is loaded by `manifest.json` as a static ruleset. Chrome applies these rules to matching requests.
+
+For example, to block requests to `microsoft.com`:
 
 ```javascript
-chrome.webRequest.onBeforeRequest.addListener(
-  function(details) { return {cancel: true}; },
-  { urls: ["*://*.microsoft.com/*"] },
-  ["blocking"]
-);
+[
+  {
+    "id": 1,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "urlFilter": "*://*.microsoft.com/*",
+      "excludedResourceTypes": ["main_frame"]
+    }
+  }
+]
 ```
+
+Notes:
+- Rule `id`s must be unique.
+- `excludedResourceTypes: ["main_frame"]` avoids breaking navigation to these domains while still blocking subresource requests (ads, pixels, scripts, etc.).

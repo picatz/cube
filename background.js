@@ -1,13 +1,2 @@
-chrome.webRequest.onBeforeRequest.addListener(
-  function(details) { 
-    // console.log(details)
-    return {cancel: true}; 
-  },
-  {urls: 
-    ["*://*.doubleclick.net/*",
-    "*://*.googleadservices.com/*",
-    "*://*.googlesyndication.com/*",
-    "*://*.moat.com/*"]
-  },
-  ["blocking"]
-);
+// Service worker for the cube extension.
+// Network blocking is handled by declarativeNetRequest rules in rules.json.

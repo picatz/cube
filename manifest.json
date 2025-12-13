@@ -2,10 +2,21 @@
   "name": "cube",
   "version": "1.0",
   "description": "Chrome URL Blocking Extension",
-  "permissions": ["webRequest", "webRequestBlocking", "<all_urls>"],
+  "manifest_version": 3,
+  "permissions": [
+    "declarativeNetRequest"
+  ],
+  "host_permissions": ["<all_urls>"],
   "background": {
-    "scripts": ["background.js"]
+    "service_worker": "background.js"
   },
-
-  "manifest_version": 2
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "ruleset_1",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
+  }
 }

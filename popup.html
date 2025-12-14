@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CUBE</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="header">
+        <div class="brand">
+          <div class="brandMark" aria-hidden="true">
+            <img
+              class="brandMarkImg"
+              src="icons/icon48.png"
+              srcset="icons/icon32.png 1x, icons/icon48.png 2x"
+              alt=""
+              draggable="false"
+            />
+          </div>
+          <div class="brandText">
+            <div class="title">CUBE</div>
+            <div class="subtitle">
+              <span class="subtitleStrong">Chrome URL Blocking Extension</span>
+              <span class="subtitleDot">·</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section class="section">
+        <label class="row">
+          <span class="label">Enabled</span>
+          <input id="toggleEnabled" type="checkbox" />
+        </label>
+        <label class="row">
+          <span class="label">Compatibility exceptions</span>
+          <input id="toggleExceptions" type="checkbox" />
+        </label>
+        <label class="row">
+          <span class="label">Support widgets allowlist</span>
+          <input id="toggleBuiltinAllowlist" type="checkbox" />
+        </label>
+        <label class="row">
+          <span class="label">Diagnostics logging</span>
+          <input id="toggleLogging" type="checkbox" />
+        </label>
+        <div class="row">
+          <span class="label"></span>
+          <button id="resetDefaults" class="remove" type="button">Reset Defaults</button>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="sectionTitle">Per-domain allowlist</div>
+        <form id="allowForm" class="row">
+          <input id="allowInput" class="input" type="text" placeholder="example.com" autocomplete="off" />
+          <button id="allowAdd" class="button" type="submit">Add</button>
+        </form>
+        <div id="allowHelp" class="help">Adds an allow rule for subresource requests to that domain (navigation is still excluded).</div>
+        <ul id="allowList" class="list"></ul>
+      </section>
+
+      <section class="section">
+        <div class="sectionTitle">Per-domain blocklist</div>
+        <form id="blockForm" class="row">
+          <input id="blockInput" class="input" type="text" placeholder="ads.example.com or example.com" autocomplete="off" />
+          <button id="blockAdd" class="button" type="submit">Block</button>
+        </form>
+        <div class="help">Adds a block rule for subresource requests to that domain (navigation is still excluded).</div>
+        <ul id="blockList" class="list"></ul>
+      </section>
+
+      <section class="section">
+        <div class="sectionTitle">Fix This Site</div>
+        <div class="help">
+          Prefer “Scoped allows” for a single third-party domain. Site bypass is a bigger hammer: it allows blocked subresource requests on
+          this site.
+        </div>
+        <div class="row">
+          <button id="bypassTab15m" class="mini" type="button">Bypass This Site (Tab, 15m)</button>
+          <button id="bypassSite15m" class="mini" type="button">Bypass Site (15m)</button>
+          <button id="bypassSiteAlways" class="button" type="button">Bypass Site (Always)</button>
+        </div>
+        <div class="row" style="justify-content: flex-end">
+          <button id="reloadTab" class="mini" type="button">Reload Tab</button>
+        </div>
+        <div id="bypassActive" class="help"></div>
+        <div class="sectionTitle" style="margin-top: 10px">Active Bypasses</div>
+        <ul id="bypassList" class="list"></ul>
+        <div class="sectionTitle" style="margin-top: 10px">Scoped Allows</div>
+        <div class="help">Allow a specific domain only when you’re on a specific site.</div>
+        <ul id="scopedAllowList" class="list"></ul>
+      </section>
+
+      <section class="section">
+        <div class="sectionTitle">Recent Activity</div>
+        <div class="row">
+          <span class="label">Last matches</span>
+          <button id="clearActivity" class="remove" type="button">Clear</button>
+        </div>
+        <div class="row">
+          <span class="label">Scope</span>
+          <select id="activityScope" class="select">
+            <option value="tab" selected>Current tab</option>
+            <option value="all">All tabs</option>
+          </select>
+        </div>
+        <div class="row">
+          <span class="label">Filter</span>
+          <select id="activityFilter" class="select">
+            <option value="all" selected>All</option>
+            <option value="block">Blocked</option>
+            <option value="allow">Allowed</option>
+            <option value="match">Matched</option>
+          </select>
+        </div>
+        <div id="activitySummary" class="help"></div>
+        <div id="activityHelp" class="help">Enable diagnostics logging to see which rules match.</div>
+        <div id="activityNotice" class="help"></div>
+        <ul id="activityList" class="list"></ul>
+      </section>
+
+      <section class="section">
+        <details class="statusDetails" id="statusDetails">
+          <summary class="statusSummary">
+            <div class="statusLeft">
+              <div class="statusTitle">Status</div>
+              <div id="statusInline" class="statusInline"></div>
+            </div>
+            <div class="statusRight">
+              <button id="copyStatus" class="mini iconButton statusCopy" type="button" aria-label="Copy status">
+                <span class="srOnly">Copy status</span>
+                <svg class="icon iconCopy" viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    fill="currentColor"
+                    d="M16 1H6a2 2 0 0 0-2 2v12h2V3h10V1Zm3 4H10a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Zm0 16H10V7h9v14Z"
+                  />
+                </svg>
+                <svg class="icon iconCheck" viewBox="0 0 24 24" aria-hidden="true">
+                  <path fill="currentColor" d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z" />
+                </svg>
+              </button>
+              <span class="statusChevron" aria-hidden="true"></span>
+            </div>
+          </summary>
+          <div id="runtimeStatus" class="statusBody"></div>
+        </details>
+        <div id="status" class="status"></div>
+      </section>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

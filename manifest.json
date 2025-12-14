@@ -1,21 +1,65 @@
 {
-  "name": "cube",
+  "name": "CUBE",
+  "short_name": "CUBE",
   "version": "1.0",
-  "description": "Chrome URL Blocking Extension",
+  "description": "Chrome URL Blocking Extension (CUBE)",
   "manifest_version": 3,
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "permissions": [
-    "declarativeNetRequest"
+    "declarativeNetRequest",
+    "declarativeNetRequestFeedback",
+    "alarms",
+    "storage",
+    "activeTab"
   ],
-  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
   "background": {
     "service_worker": "background.js"
   },
   "declarative_net_request": {
     "rule_resources": [
       {
-        "id": "ruleset_1",
+        "id": "rules_block_1",
         "enabled": true,
         "path": "rules.json"
+      },
+      {
+        "id": "rules_block_2",
+        "enabled": true,
+        "path": "rules.2.json"
+      },
+      {
+        "id": "rules_block_3",
+        "enabled": true,
+        "path": "rules.3.json"
+      },
+      {
+        "id": "rules_block_4",
+        "enabled": true,
+        "path": "rules.4.json"
+      },
+      {
+        "id": "rules_exceptions",
+        "enabled": false,
+        "path": "rules.exceptions.json"
+      },
+      {
+        "id": "rules_allowlist",
+        "enabled": false,
+        "path": "rules.allowlist.json"
       }
     ]
   }

@@ -37,6 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const DEFAULT_TEMP_MINUTES = 15;
   const els = {
     brandMark: document.querySelector(".brandMark"),
+    brandMarkCube: document.querySelector(".brandMarkCube"),
     toggleEnabled: document.getElementById("toggleEnabled"),
     toggleExceptions: document.getElementById("toggleExceptions"),
     toggleBuiltinAllowlist: document.getElementById("toggleBuiltinAllowlist"),
@@ -72,6 +73,54 @@ document.addEventListener("DOMContentLoaded", () => {
     copyStatus: document.getElementById("copyStatus"),
     status: document.getElementById("status"),
   };
+
+  let brandMarkHoverAt = 0;
+  let cubeRotX = -28;
+  let cubeRotY = 45;
+  let cubeRotZ = 0;
+
+  function prefersReducedMotion() {
+    try {
+      return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    } catch {
+      return false;
+    }
+  }
+
+  function applyCubeTransform(durationMs) {
+    if (!els.brandMark || !els.brandMarkCube) return;
+    if (prefersReducedMotion()) return;
+    if (Number.isFinite(durationMs)) els.brandMark.style.setProperty("--cubeDur", `${Math.max(0, durationMs)}ms`);
+    els.brandMarkCube.style.transform = `rotateX(${cubeRotX}deg) rotateY(${cubeRotY}deg) rotateZ(${cubeRotZ}deg)`;
+  }
+
+  function turnCube(kind) {
+    if (!els.brandMark || !els.brandMarkCube) return;
+    if (prefersReducedMotion()) return;
+
+    const baseJitter = () => (Math.random() * 2 - 1);
+    const bump = (v, min, max) => Math.max(min, Math.min(max, v));
+
+    let durationMs = 680;
+    if (kind === "open") {
+      cubeRotY += 18;
+      cubeRotX += -2;
+      cubeRotZ += baseJitter() * 1.5;
+      durationMs = 760;
+    } else if (kind === "hover") {
+      cubeRotY += Math.random() < 0.5 ? 90 : -90;
+      cubeRotX = bump(cubeRotX + baseJitter() * 4, -42, -16);
+      cubeRotZ = bump(cubeRotZ + baseJitter() * 4, -14, 14);
+      durationMs = 660;
+    } else {
+      cubeRotY += 180;
+      cubeRotX = bump(cubeRotX + baseJitter() * 7, -46, -12);
+      cubeRotZ = bump(cubeRotZ + baseJitter() * 10, -20, 20);
+      durationMs = 840;
+    }
+
+    applyCubeTransform(durationMs);
+  }
 
   function setStatus(text) {
     if (!els.status) return;
@@ -1681,8 +1730,21 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (els.brandMark) {
+    if (els.brandMarkCube) {
+      // Let the initial CSS transform apply, then do a tiny "turn" on open.
+      setTimeout(() => turnCube("open"), 60);
+    }
+
+    els.brandMark.addEventListener("mouseenter", () => {
+      const now = Date.now();
+      if (now - brandMarkHoverAt < 650) return;
+      brandMarkHoverAt = now;
+      if (els.brandMarkCube) turnCube("hover");
+    });
+
     els.brandMark.addEventListener("click", (e) => {
       e.preventDefault();
+      if (els.brandMarkCube) turnCube("click");
       els.brandMark.classList.remove("isSpinning");
       // Trigger reflow so the animation restarts.
       void els.brandMark.offsetWidth;

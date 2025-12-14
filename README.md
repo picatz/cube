@@ -1,74 +1,99 @@
-# cube
-> Chrome URL Blocking Extension
+# CUBE
 
-This is a custom [Google Chrome](https://www.google.com/chrome/) extension that blocks network requests matching a predefined set of URL patterns.
+<p>
+  <img src="icons/icon128.png" width="72" height="72" alt="CUBE icon" />
+</p>
 
-## Installation
+**CUBE** = **C**hrome **U**RL **B**locking **E**xtension.
 
-1. Clone this repository, so it exists locally: `$ git clone https://github.com/picatz/cube.git`
-2. In your browser, open the Extension Management page by navigating to `chrome://extensions` or by clicking on the Chrome menu, hovering over More Tools then selecting Extensions.
-3. Enable Developer Mode by clicking the toggle switch next to Developer mode.
-4. Click the LOAD UNPACKED button and select the extension directory (this repository, where it was cloned to).
+A modern, privacy-first request blocker built on **Manifest V3** + Chrome’s **`declarativeNetRequest`** engine.
 
-## How does it work?
+## What you get
 
-`cube` is a Manifest V3 extension that uses Chrome’s [declarativeNetRequest](https://developer.chrome.com/docs/extensions/reference/declarativeNetRequest/) API.
+- **Privacy-first defaults**: block rules enabled; optional compatibility allow rules are *off* until you opt in.
+- **Fast & local**: blocking happens in Chrome’s native DNR engine (no proxy, no remote service).
+- **Modern UX**: “Fix This Site” flows (temporary tab/site bypass), per-domain allow/block, and a “Recent Activity” view.
+- **Transparent diagnostics**: optional local match logging via `onRuleMatchedDebug` (unpacked/dev only).
 
-The block list lives in `rules.json`, which is loaded by `manifest.json` as a static ruleset. Chrome applies these rules to matching requests.
+## Install (unpacked / dev)
 
-By default, `cube` is privacy-first:
-- The block ruleset is enabled.
-- Optional allow rulesets (compatibility exceptions / support widget allowlist) are disabled unless you explicitly enable them in the popup.
+1. Open `chrome://extensions`
+2. Enable **Developer mode**
+3. Click **Load unpacked**
+4. Select this repo folder
 
-### Regenerating rulesets
+## How blocking works
 
-The rulesets are generated from Adblock Plus-style filter lists (currently EasyList + EasyPrivacy) via a small Go program:
+CUBE ships **static rulesets** (generated from filter lists) and also supports **dynamic rules** you add from the popup:
+
+- Static rulesets (packaged, versioned):
+  - `rules.json`, `rules.2.json`, `rules.3.json`, `rules.4.json` (block shards)
+  - `rules.exceptions.json` (optional compatibility exceptions; disabled by default)
+  - `rules.allowlist.json` (optional support-widget allowlist; disabled by default)
+- Dynamic/session rules (runtime):
+  - per-domain allow/block
+  - scoped allows
+  - temporary bypass (tab / site) to quickly make a site work
+
+## Regenerate rulesets
+
+Rules are generated from **Adblock Plus (ABP)-style** filter lists using Go:
 
 ```bash
 go run ./tools/rulegen
 ```
 
 Useful flags:
-- `-max-rules 30000` to cap the output size.
-- `-blocks-shards 4` to write multiple block rulesets (`rules.json`, `rules.2.json`, ...).
-- `-source name=url` (repeatable) to add/replace filter list sources.
-- `-exceptions none|scoped|all` controls which upstream exception rules are emitted into `rules.exceptions.json` (the default is `scoped`).
-- `-builtin-allowlist=false` disables generating the small support-widget allowlist ruleset.
-- `-allow-domain example.com` (repeatable) adds domains to the generated allowlist ruleset.
 
-Generated files:
-- `rules.json` (blocks shard 1)
-- `rules.2.json` (blocks shard 2)
-- `rules.3.json` (blocks shard 3)
-- `rules.4.json` (blocks shard 4)
-- `rules.exceptions.json` (allow rules derived from upstream exceptions; disabled by default)
-- `rules.allowlist.json` (allow rules for support widgets; disabled by default)
+- `-blocks-shards 4` writes `rules.json`, `rules.2.json`, …
+- `-max-rules 30000` caps each ruleset
+- `-source name=url` adds/replaces sources (repeatable)
+- `-exceptions none|scoped|all` controls `@@` exception emission into `rules.exceptions.json`
+- `-builtin-allowlist=false` disables the small support-widget allowlist ruleset
+- `-allow-domain example.com` adds domains to the generated allowlist ruleset (repeatable)
 
-### Customizing without reload
+### Adding uBlock Origin / uAssets lists
 
-Open the extension popup to:
-- Enable/disable `cube`
-- Toggle the optional allow rulesets
-- Add/remove domains from a per-domain allowlist (implemented as dynamic DNR allow rules)
-- Add/remove domains from a per-domain blocklist (implemented as dynamic DNR block rules)
-- Optionally enable diagnostics logging to see recent rule matches (requires granting the optional `declarativeNetRequestFeedback` permission; per Chrome docs this is for debugging/unpacked extensions)
+You *can* add additional sources (including uBO-maintained lists), e.g.:
 
-For example, to block requests to `microsoft.com`:
-
-```javascript
-[
-  {
-    "id": 1,
-    "priority": 1,
-    "action": { "type": "block" },
-    "condition": {
-      "urlFilter": "*://*.microsoft.com/*",
-      "excludedResourceTypes": ["main_frame"]
-    }
-  }
-]
+```bash
+go run ./tools/rulegen \
+  -source ubo_uassets=https://raw.githubusercontent.com/uBlockOrigin/uAssets/refs/heads/master/filters/filters.txt
 ```
 
-Notes:
-- Rule `id`s must be unique.
-- `excludedResourceTypes: ["main_frame"]` avoids breaking navigation to these domains while still blocking subresource requests (ads, pixels, scripts, etc.).
+But `rulegen` intentionally supports a **conservative subset** of ABP-style rules so it stays faithful to what DNR can express.
+
+**Supported (high-level):**
+- Network blocking rules for `||host^` / `||host/path` and some `|https://…` rules
+- A subset of `$` options: `third-party`, `~third-party`, `domain=…`, and common resource types (`script`, `image`, `stylesheet`, `xmlhttprequest`, …)
+- `@@` exception rules (per `-exceptions`)
+
+**Not supported (examples):**
+- Cosmetic filtering (`##`, `#@#`)
+- Scriptlets / procedural rules / element hiding
+- Redirect/replace/removeparam and other behavior-changing modifiers
+- Regex filters and many advanced ABP/uBO modifiers
+
+Unsupported lines are **skipped** on purpose (better to skip than to guess incorrectly).
+
+## Regenerate icons
+
+The icon set is generated (deterministically) from Go:
+
+```bash
+go run ./tools/icongen -outdir icons
+```
+
+Outputs:
+- `icons/icon16.png`
+- `icons/icon32.png`
+- `icons/icon48.png`
+- `icons/icon128.png`
+
+## Diagnostics note
+
+Diagnostics logging uses `declarativeNetRequest.onRuleMatchedDebug`. Per Chrome’s permission model, this is intended for **debugging/unpacked extensions**; CUBE keeps diagnostics **off by default** and stores matches **locally**.
+
+## License
+
+MIT — see `LICENSE`.

@@ -52,30 +52,6 @@ Useful flags:
 - `-builtin-allowlist=false` disables the small support-widget allowlist ruleset
 - `-allow-domain example.com` adds domains to the generated allowlist ruleset (repeatable)
 
-### Adding uBlock Origin / uAssets lists
-
-You *can* add additional sources (including uBO-maintained lists), e.g.:
-
-```bash
-go run ./tools/rulegen \
-  -source ubo_uassets=https://raw.githubusercontent.com/uBlockOrigin/uAssets/refs/heads/master/filters/filters.txt
-```
-
-But `rulegen` intentionally supports a **conservative subset** of ABP-style rules so it stays faithful to what DNR can express.
-
-**Supported (high-level):**
-- Network blocking rules for `||host^` / `||host/path` and some `|https://…` rules
-- A subset of `$` options: `third-party`, `~third-party`, `domain=…`, and common resource types (`script`, `image`, `stylesheet`, `xmlhttprequest`, …)
-- `@@` exception rules (per `-exceptions`)
-
-**Not supported (examples):**
-- Cosmetic filtering (`##`, `#@#`)
-- Scriptlets / procedural rules / element hiding
-- Redirect/replace/removeparam and other behavior-changing modifiers
-- Regex filters and many advanced ABP/uBO modifiers
-
-Unsupported lines are **skipped** on purpose (better to skip than to guess incorrectly).
-
 ## Regenerate icons
 
 The icon set is generated (deterministically) from Go:
